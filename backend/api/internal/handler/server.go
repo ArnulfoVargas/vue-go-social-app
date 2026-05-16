@@ -7,7 +7,9 @@ type Server struct {
 }
 
 func NewServer() *Server {
-	return &Server{app: fiber.New()}
+	app := fiber.New()
+
+	return &Server{app: app}
 }
 
 func (s *Server) RegisterRoutes() {
