@@ -1,15 +1,21 @@
 package handler
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"Server/internal/store"
+	"os"
+
+	"github.com/gofiber/fiber/v3"
+)
 
 type Server struct {
 	app *fiber.App
+	db  *store.Database
 }
 
-func NewServer() *Server {
+func NewServer(db *store.Database) *Server {
 	app := fiber.New()
 
-	return &Server{app: app}
+	return &Server{app: app, db: db}
 }
 
 func (s *Server) RegisterRoutes() {
@@ -17,7 +23,7 @@ func (s *Server) RegisterRoutes() {
 }
 
 func (s *Server) Start() {
-	panic(s.app.Listen(":3000"))
+	panic(s.app.Listen(":" + os.Getenv("PORT")))
 }
 
 func (s *Server) RegisterMainRoutes() {
