@@ -2,6 +2,9 @@ package main
 
 import (
 	"Server/internal/handler"
+	"Server/internal/repository"
+	"Server/internal/server"
+	"Server/internal/service"
 	"Server/internal/store"
 	"context"
 	"flag"
@@ -45,12 +48,21 @@ func main() {
 		db.Client.Disconnect(ctx)
 	}()
 
-	server := handler.NewServer(db)
-	server.RegisterRoutes()
+	server := server.NewServer(db)
+
+	registerServices(server)
+
+	handler.RegisterRoutes(server)
 
 	if *mode == modeDevelopment {
 		server.UseSwagger()
 	}
 
 	server.Start()
+}
+
+func registerServices(server *server.Server) {
+	authRepository := repository.NewAuthRepository(server.Db)
+	authService := service.NewAuthService(authRepository)
+	server.RegisterAuthService(authService)
 }
