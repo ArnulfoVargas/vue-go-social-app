@@ -7,6 +7,8 @@ import (
 	"flag"
 	"time"
 
+	_ "Server/internal/docs"
+
 	"github.com/joho/godotenv"
 )
 
@@ -35,6 +37,11 @@ func main() {
 	}()
 
 	server := handler.NewServer(db)
+	server.RegisterRoutes()
+
+	if *mode == modeDevelopment {
+		server.UseSwagger()
+	}
 
 	server.Start()
 }

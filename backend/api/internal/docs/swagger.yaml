@@ -1,0 +1,17 @@
+info:
+  contact: {}
+paths:
+  /:
+    get:
+      description: Returns a simple greeting
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Hello, World!
+          schema:
+            type: string
+      summary: Hello World
+      tags:
+      - Testing
+swagger: "2.0"
