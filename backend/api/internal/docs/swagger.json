@@ -1,8 +1,15 @@
 {
+    "schemes": [
+        "http"
+    ],
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "This is a social media API that allows users to create posts, like posts, and follow other users.",
+        "title": "Social Media API",
+        "contact": {},
+        "version": "0.1"
     },
+    "basePath": "/",
     "paths": {
         "/": {
             "get": {
@@ -23,6 +30,14 @@
                     }
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Bearer token authentication",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }
