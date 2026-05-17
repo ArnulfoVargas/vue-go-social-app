@@ -26,7 +26,7 @@ func (r *authRepository) CreateUser(req domain.User) (*domain.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := collection.InsertOne(ctx, &req)
+	_, err := collection.InsertOne(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("error creating user: %w", err)
 	}
@@ -44,7 +44,7 @@ func (r *authRepository) FindUserByEmail(email string) (*domain.User, error) {
 	err := collection.FindOne(ctx, bson.M{"email": email, "status": 1}).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, fmt.Errorf("user not found")
+			return nil, nil
 		}
 
 		return nil, fmt.Errorf("error getting user by email: %w", err)

@@ -20,15 +20,13 @@ func NewAuthHandler(validator *validator.Validator, service domain.AuthService) 
 	}
 }
 
-func SetupAuthRoutes(s fiber.Router, validator *validator.Validator, service domain.AuthService) fiber.Router {
+func SetupAuthRoutes(s fiber.Router, validator *validator.Validator, service domain.AuthService) {
 	g := s.Group("/auth")
 
 	handler := NewAuthHandler(validator, service)
 
 	g.Post("/register", handler.register)
 	g.Post("/login", handler.login)
-
-	return g
 }
 
 // Register a new user
@@ -69,7 +67,6 @@ func (h *AuthHandler) register(c fiber.Ctx) error {
 // @Produce json
 // @Param request body dto.LoginRequest true "User login credentials"
 // @Router /api/v1/auth/login [post]
-// @Success 200 {object} domain.AuthResponse
 func (h *AuthHandler) login(c fiber.Ctx) error {
 	var req dto.LoginRequest
 

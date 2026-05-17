@@ -2,9 +2,7 @@ package main
 
 import (
 	"Server/internal/handler"
-	"Server/internal/repository"
 	"Server/internal/server"
-	"Server/internal/service"
 	"Server/internal/store"
 	"context"
 	"flag"
@@ -49,8 +47,7 @@ func main() {
 	}()
 
 	server := server.NewServer(db)
-
-	registerServices(server)
+	server.RegisterServices()
 
 	handler.RegisterRoutes(server)
 
@@ -59,10 +56,4 @@ func main() {
 	}
 
 	server.Start()
-}
-
-func registerServices(server *server.Server) {
-	authRepository := repository.NewAuthRepository(server.Db)
-	authService := service.NewAuthService(authRepository)
-	server.RegisterAuthService(authService)
 }

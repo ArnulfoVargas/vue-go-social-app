@@ -49,8 +49,10 @@ func (s *authService) Register(c fiber.Ctx, req dto.RegisterRequest) (string, er
 	u, err := s.repo.CreateUser(user)
 
 	if err != nil {
-		return "", fmt.Errorf("error creating user")
+		return "", fmt.Errorf("error creating user: %w", err)
 	}
+
+	println(user.ID.Hex())
 
 	return generateJWT(u)
 }

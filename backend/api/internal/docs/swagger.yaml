@@ -73,11 +73,7 @@ paths:
           $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/domain.AuthResponse'
+      responses: {}
       summary: Login a user
       tags:
       - auth
@@ -103,6 +99,21 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /api/v1/users/{id}:
+    get:
+      description: Get user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
 schemes:
 - http
 securityDefinitions:

@@ -15,6 +15,7 @@ type Server struct {
 	Db          *store.Database
 	Validator   *validator.Validator
 	AuthService domain.AuthService
+	UserService domain.UserService
 }
 
 var (
@@ -41,4 +42,8 @@ func (s *Server) Start() {
 
 func (s *Server) RegisterAuthService(authService domain.AuthService) {
 	s.AuthService = authService
+}
+
+func (s *Server) RegisterUserService(userService domain.UserService) {
+	s.UserService = userService
 }
