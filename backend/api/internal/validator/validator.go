@@ -1,7 +1,7 @@
 package validator
 
 import (
-	"Server/internal/domain"
+	"Server/internal/dto"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -14,12 +14,12 @@ func New() *Validator {
 	return &Validator{v: validator.New()}
 }
 
-func (val *Validator) Validate(s any) []domain.Error {
-	var errs []domain.Error
+func (val *Validator) Validate(s any) []dto.Error {
+	var errs []dto.Error
 	err := val.v.Struct(s)
 	if err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
-			errs = append(errs, domain.Error{
+			errs = append(errs, dto.Error{
 				Field: e.Field(),
 				Tag:   e.Tag(),
 			})

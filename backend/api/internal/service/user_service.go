@@ -2,21 +2,28 @@ package service
 
 import (
 	"Server/internal/domain"
+	"Server/internal/dto"
+	"Server/internal/helpers"
+	"Server/internal/model"
 	"fmt"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type userService struct {
-	repo domain.UserRepository
+	userRepo   domain.UserRepository
+	followRepo domain.FollowRepository
 }
 
-func NewUserService(userRepository domain.UserRepository) *userService {
+func NewUserService(userRepository domain.UserRepository, followRepository domain.FollowRepository) *userService {
 	return &userService{
-		repo: userRepository,
+		userRepo:   userRepository,
+		followRepo: followRepository,
 	}
 }
 
-func (s *userService) GetUser(id string) (*domain.User, error) {
-	user, err := s.repo.GetUser(id)
+func (s *userService) GetUser(id string) (*model.User, error) {
+	user, err := s.userRepo.GetUserById(id)
 	if err != nil {
 		return nil, err
 	}
@@ -26,4 +33,55 @@ func (s *userService) GetUser(id string) (*domain.User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *userService) UpdateUser(id string, user *dto.UpdateProfileRequest) error {
+	data := bson.M{}
+
+	if user.Name != nil {
+		data["name"] = *user.Name
+	}
+
+	if user.ImageUrl != nil {
+		data["image"] = *user.ImageUrl
+	}
+	if user.Bio != nil {
+		data["bio"] = *user.Bio
+	}
+
+	return s.userRepo.UpdateUserById(id, data)
+}
+
+func (s *userService) GetSuggestedUsers(id string) ([]model.User, error) {
+	followingIds, err := s.followRepo.GetFollowingIds(id)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	suggestedIds, err := s.followRepo.GetRelatedFollowSuggestions(userId, followingIds)
+	if err != nil {
+		return nil, err
+	}
+
+	sugIdsLen := len(suggestedIds)
+	const MAX_SUGGESTED_IDS = 20
+	if sugIdsLen < MAX_SUGGESTED_IDS {
+		excludedIds := append(followingIds, userId)
+		excludedIds = append(excludedIds, suggestedIds...)
+
+		randomUsers, err := s.userRepo.GetIdsExcluding(excludedIds, MAX_SUGGESTED_IDS-sugIdsLen)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return s.userRepo.GetUsersByIds(append(suggestedIds, randomUsers...))
+	}
+
+	return s.userRepo.GetUsersByIds(suggestedIds)
 }

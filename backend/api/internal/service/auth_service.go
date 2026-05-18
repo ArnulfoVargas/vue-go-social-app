@@ -3,6 +3,7 @@ package service
 import (
 	"Server/internal/domain"
 	"Server/internal/dto"
+	"Server/internal/model"
 	"fmt"
 	"time"
 
@@ -12,65 +13,73 @@ import (
 )
 
 type authService struct {
-	repo domain.AuthRepository
+	authRepo domain.AuthRepository
 }
 
 func NewAuthService(repo domain.AuthRepository) *authService {
-	return &authService{repo: repo}
+	return &authService{authRepo: repo}
 }
 
-func (s *authService) Register(c fiber.Ctx, req dto.RegisterRequest) (string, error) {
-	existing, err := s.repo.FindUserByEmail(req.Email)
+func (s *authService) Register(c fiber.Ctx, req dto.RegisterRequest) (string, string, error) {
+	existing, err := s.authRepo.FindUserByEmail(req.Email)
 
 	if err != nil && err.Error() != "user not found" {
-		return "", err
+		return "", "", err
 	}
 
 	if existing != nil {
-		return "", fmt.Errorf("user already exists")
+		return "", "", fmt.Errorf("user already exists")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("error hashing password")
+		return "", "", fmt.Errorf("error hashing password")
 	}
 
-	user := domain.User{
+	user := model.User{
 		ID:        primitive.NewObjectID(),
-		Name:      req.Name + " " + req.LastName,
+		Name:      req.Name,
 		Email:     req.Email,
 		Password:  string(hash),
 		Status:    1,
-		Followers: make([]primitive.ObjectID, 0),
-		Following: make([]primitive.ObjectID, 0),
 		CreatedAt: primitive.NewDateTimeFromTime(time.Now()),
 		UpdatedAt: primitive.NewDateTimeFromTime(time.Now()),
 	}
-	u, err := s.repo.CreateUser(user)
+	u, err := s.authRepo.CreateUser(user)
 
 	if err != nil {
-		return "", fmt.Errorf("error creating user: %w", err)
+		return "", "", fmt.Errorf("error creating user: %w", err)
 	}
 
 	println(user.ID.Hex())
 
-	return generateJWT(u)
+	token, err := generateJWT(u)
+	if err != nil {
+		return "", "", fmt.Errorf("error generating token: %w", err)
+	}
+
+	return token, u.ID.Hex(), nil
 }
 
-func (s *authService) Login(c fiber.Ctx, req dto.LoginRequest) (string, error) {
-	existing, err := s.repo.FindUserByEmail(req.Email)
+func (s *authService) Login(c fiber.Ctx, req dto.LoginRequest) (string, string, error) {
+	existing, err := s.authRepo.FindUserByEmail(req.Email)
 
 	if err != nil {
-		return "", fmt.Errorf("error finding user")
+		return "", "", fmt.Errorf("error finding user")
 	}
 
 	if existing == nil {
-		return "", fmt.Errorf("user not found")
+		return "", "", fmt.Errorf("user not found")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(existing.Password), []byte(req.Password)); err != nil {
-		return "", fmt.Errorf("invalid password")
+		return "", "", fmt.Errorf("invalid password")
 	}
 
-	return generateJWT(existing)
+	token, err := generateJWT(existing)
+	if err != nil {
+		return "", "", fmt.Errorf("error generating token: %w", err)
+	}
+
+	return token, existing.ID.Hex(), nil
 }

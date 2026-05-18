@@ -1,7 +1,7 @@
 package service
 
 import (
-	"Server/internal/domain"
+	"Server/internal/model"
 	"fmt"
 	"os"
 	"time"
@@ -15,7 +15,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func generateJWT(user *domain.User) (string, error) {
+func generateJWT(user *model.User) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		return "", fmt.Errorf("JWT_SECRET is not set")

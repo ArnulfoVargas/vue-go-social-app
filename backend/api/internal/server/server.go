@@ -11,11 +11,12 @@ import (
 )
 
 type Server struct {
-	App         *fiber.App
-	Db          *store.Database
-	Validator   *validator.Validator
-	AuthService domain.AuthService
-	UserService domain.UserService
+	App           *fiber.App
+	Db            *store.Database
+	Validator     *validator.Validator
+	AuthService   domain.AuthService
+	UserService   domain.UserService
+	FollowService domain.FollowService
 }
 
 var (
@@ -46,4 +47,8 @@ func (s *Server) RegisterAuthService(authService domain.AuthService) {
 
 func (s *Server) RegisterUserService(userService domain.UserService) {
 	s.UserService = userService
+}
+
+func (s *Server) RegisterFollowService(followService domain.FollowService) {
+	s.FollowService = followService
 }
