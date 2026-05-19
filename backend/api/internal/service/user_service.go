@@ -1,6 +1,7 @@
 package service
 
 import (
+	"Server/internal/constants"
 	"Server/internal/domain"
 	"Server/internal/dto"
 	"Server/internal/helpers"
@@ -63,18 +64,17 @@ func (s *userService) GetSuggestedUsers(id string) ([]model.User, error) {
 		return nil, err
 	}
 
-	const MAX_SUGGESTED_IDS = 3
-	suggestedIds, err := s.followRepo.GetRelatedFollowSuggestions(userId, followingIds, MAX_SUGGESTED_IDS)
+	suggestedIds, err := s.followRepo.GetRelatedFollowSuggestions(userId, followingIds, constants.MAX_SUGGESTED_IDS)
 	if err != nil {
 		return nil, err
 	}
 
 	sugIdsLen := len(suggestedIds)
-	if sugIdsLen < MAX_SUGGESTED_IDS {
+	if sugIdsLen < constants.MAX_SUGGESTED_IDS {
 		excludedIds := append(followingIds, userId)
 		excludedIds = append(excludedIds, suggestedIds...)
 
-		randomUsers, err := s.userRepo.GetIdsExcluding(excludedIds, MAX_SUGGESTED_IDS-sugIdsLen)
+		randomUsers, err := s.userRepo.GetIdsExcluding(excludedIds, constants.MAX_SUGGESTED_IDS-sugIdsLen)
 
 		if err != nil {
 			return nil, err
