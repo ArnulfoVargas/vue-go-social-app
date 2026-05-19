@@ -63,13 +63,13 @@ func (s *userService) GetSuggestedUsers(id string) ([]model.User, error) {
 		return nil, err
 	}
 
-	suggestedIds, err := s.followRepo.GetRelatedFollowSuggestions(userId, followingIds)
+	const MAX_SUGGESTED_IDS = 3
+	suggestedIds, err := s.followRepo.GetRelatedFollowSuggestions(userId, followingIds, MAX_SUGGESTED_IDS)
 	if err != nil {
 		return nil, err
 	}
 
 	sugIdsLen := len(suggestedIds)
-	const MAX_SUGGESTED_IDS = 20
 	if sugIdsLen < MAX_SUGGESTED_IDS {
 		excludedIds := append(followingIds, userId)
 		excludedIds = append(excludedIds, suggestedIds...)
@@ -84,4 +84,8 @@ func (s *userService) GetSuggestedUsers(id string) ([]model.User, error) {
 	}
 
 	return s.userRepo.GetUsersByIds(suggestedIds)
+}
+
+func (s *userService) DeleteUser(id string) error {
+	return s.userRepo.DeleteUserById(id)
 }

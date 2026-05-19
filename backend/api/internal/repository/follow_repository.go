@@ -216,7 +216,7 @@ func (r *followRepository) GetFollowingIds(userID string) ([]primitive.ObjectID,
 	return followingIds, nil
 }
 
-func (r *followRepository) GetRelatedFollowSuggestions(userId primitive.ObjectID, followingIds []primitive.ObjectID) ([]primitive.ObjectID, error) {
+func (r *followRepository) GetRelatedFollowSuggestions(userId primitive.ObjectID, followingIds []primitive.ObjectID, limit int) ([]primitive.ObjectID, error) {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
@@ -255,7 +255,7 @@ func (r *followRepository) GetRelatedFollowSuggestions(userId primitive.ObjectID
 			"score": bson.M{"$sum": 1},
 		}}},
 		{{Key: "$sort", Value: bson.M{"score": -1}}},
-		{{Key: "$limit", Value: 20}},
+		{{Key: "$limit", Value: limit}},
 	}
 
 	cursor, err := r.collection.Aggregate(ctx, pipeline)

@@ -17,22 +17,24 @@ type UserHandler struct {
 	followService domain.FollowService
 }
 
-func NewUserHandler(validator *validator.Validator, service domain.UserService) *UserHandler {
+func NewUserHandler(validator *validator.Validator, service domain.UserService, followService domain.FollowService) *UserHandler {
 	return &UserHandler{
-		validator:   validator,
-		userService: service,
+		validator:     validator,
+		userService:   service,
+		followService: followService,
 	}
 }
 
-func SetupUserRoutes(r fiber.Router, v *validator.Validator, s domain.UserService) {
+func SetupUserRoutes(r fiber.Router, v *validator.Validator, s domain.UserService, fs domain.FollowService) {
 	g := r.Group("/users", middleware.Protected(service.ParseJWT))
 
-	handler := NewUserHandler(v, s)
+	handler := NewUserHandler(v, s, fs)
 
+	g.Get("/suggest", handler.GetSuggestedUsers)
 	g.Get("/:id", handler.GetUser)
 	g.Patch("/:id", handler.UpdateUser)
 	g.Put("/follow/:id", handler.ToggleFollowUser)
-	g.Get("/sugest", handler.GetSuggestedUsers)
+	g.Delete("/:id", handler.DeleteUser)
 }
 
 // @Summary Get user by ID
@@ -89,7 +91,6 @@ func (h *UserHandler) GetUser(c fiber.Ctx) error {
 func (h *UserHandler) UpdateUser(c fiber.Ctx) error {
 	id, ok := c.Locals("userID").(string)
 
-	println(id)
 	if id == "" || !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResponse{
 			Error:  "authentication required",
@@ -143,7 +144,7 @@ func (h *UserHandler) UpdateUser(c fiber.Ctx) error {
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
-// @Router /api/v1/users/{id}/follow [post]
+// @Router /api/v1/users/follow/{id} [put]
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -174,16 +175,20 @@ func (h *UserHandler) ToggleFollowUser(c fiber.Ctx) error {
 		})
 	}
 
-	if err := h.followService.ToggleFollowUser(id, pathID); err != nil {
+	if follow, err := h.followService.ToggleFollowUser(id, pathID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
 			Error:  err.Error(),
 			Status: fiber.StatusInternalServerError,
 		})
+	} else {
+		message := "follow status toggled to follow"
+		if !follow {
+			message = "follow status toggled to unfollow"
+		}
+		return c.JSON(dto.MessageResponse{
+			Message: message,
+		})
 	}
-
-	return c.JSON(dto.MessageResponse{
-		Message: "follow status toggled successfully",
-	})
 }
 
 // @Summary Get suggested users
@@ -191,7 +196,7 @@ func (h *UserHandler) ToggleFollowUser(c fiber.Ctx) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Router /api/v1/users/suggested [get]
+// @Router /api/v1/users/suggest [get]
 // @Security BearerAuth
 func (h *UserHandler) GetSuggestedUsers(c fiber.Ctx) error {
 	id, ok := c.Locals("userID").(string)
@@ -210,7 +215,35 @@ func (h *UserHandler) GetSuggestedUsers(c fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(dto.GenericResponse[[]model.User]{
+	return c.Status(fiber.StatusOK).JSON(dto.GenericResponse[[]model.User]{
 		Data: users,
 	})
+}
+
+// @Tags users
+// @Router /api/v1/users/{id} [delete]
+// @Security BearerAuth
+// @Summary Delete user
+// @Description Deletes the user with the given ID
+// @Param id path string true "User ID"
+func (h *UserHandler) DeleteUser(c fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	localsId, ok := c.Locals("userID").(string)
+	if !ok {
+		return c.SendStatus(fiber.StatusForbidden)
+	}
+
+	if id != localsId {
+		return c.SendStatus(fiber.StatusForbidden)
+	}
+
+	if err := h.userService.DeleteUser(id); err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
 }

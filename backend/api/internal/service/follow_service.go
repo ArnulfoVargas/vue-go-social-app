@@ -17,24 +17,24 @@ func NewFollowService(userRepo domain.UserRepository, followRepo domain.FollowRe
 	}
 }
 
-func (s *followService) ToggleFollowUser(followerID, followingID string) error {
+func (s *followService) ToggleFollowUser(followerID, followingID string) (bool, error) {
 	exists, err := s.userRepo.UserExistsById(followingID)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if !exists {
-		return fmt.Errorf("user not found")
+		return false, fmt.Errorf("user not found")
 	}
 
 	isFollowing, err := s.followRepo.UserIsFollowing(followerID, followingID)
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if isFollowing {
-		return s.followRepo.UnfollowUser(followerID, followingID)
+		return false, s.followRepo.UnfollowUser(followerID, followingID)
 	}
 
-	return s.followRepo.FollowUser(followerID, followingID)
+	return true, s.followRepo.FollowUser(followerID, followingID)
 }

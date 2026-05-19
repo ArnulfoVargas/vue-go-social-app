@@ -5,7 +5,7 @@ import (
 )
 
 type FollowService interface {
-	ToggleFollowUser(userID, targetUserID string) error
+	ToggleFollowUser(userID, targetUserID string) (bool, error)
 }
 
 type FollowRepository interface {
@@ -15,5 +15,5 @@ type FollowRepository interface {
 	GetFollowingCount(userID string) (int64, error)
 	GetFollowerCount(userID string) (int64, error)
 	GetFollowingIds(userID string) ([]primitive.ObjectID, error)
-	GetRelatedFollowSuggestions(userId primitive.ObjectID, followingIds []primitive.ObjectID) ([]primitive.ObjectID, error)
+	GetRelatedFollowSuggestions(userId primitive.ObjectID, followingIds []primitive.ObjectID, limit int) ([]primitive.ObjectID, error)
 }

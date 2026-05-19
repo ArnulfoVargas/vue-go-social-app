@@ -183,3 +183,24 @@ func (r *userRepository) GetIdsExcluding(excludeIDs []primitive.ObjectID, limit 
 
 	return ids, nil
 }
+
+func (r *userRepository) DeleteUserById(id string) error {
+	objId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %s", id)
+	}
+
+	ctx, cancel := helpers.GenerateContext()
+	defer cancel()
+
+	filter := bson.M{"_id": objId}
+	result := bson.M{
+		"$set": bson.M{"status": 0, "updatedAt": primitive.NewDateTimeFromTime(time.Now())},
+	}
+	_, err = r.collection.UpdateOne(ctx, filter, result)
+	if err != nil {
+		return fmt.Errorf("error deleting user: %w", err)
+	}
+
+	return nil
+}

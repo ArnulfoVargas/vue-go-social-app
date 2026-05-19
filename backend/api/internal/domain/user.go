@@ -12,6 +12,7 @@ type UserService interface {
 	GetUser(id string) (*model.User, error)
 	UpdateUser(id string, user *dto.UpdateProfileRequest) error
 	GetSuggestedUsers(id string) ([]model.User, error)
+	DeleteUser(id string) error
 }
 
 type UserRepository interface {
@@ -21,4 +22,5 @@ type UserRepository interface {
 	GetUsersExcluding(excludeIDs []primitive.ObjectID, limit int) ([]model.User, error)
 	GetUsersByIds(ids []primitive.ObjectID) ([]model.User, error)
 	GetIdsExcluding(excludeIDs []primitive.ObjectID, limit int) ([]primitive.ObjectID, error)
+	DeleteUserById(id string) error
 }

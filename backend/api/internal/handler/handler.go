@@ -11,7 +11,7 @@ func RegisterRoutes(s *server.Server) {
 
 	g := s.App.Group("/api/v1")
 	SetupAuthRoutes(g, s.Validator, s.AuthService)
-	SetupUserRoutes(g, s.Validator, s.UserService)
+	SetupUserRoutes(g, s.Validator, s.UserService, s.FollowService)
 }
 
 // @Summary Hello World
