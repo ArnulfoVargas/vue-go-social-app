@@ -2,6 +2,7 @@ package main
 
 import (
 	"Server/internal/handler"
+	"Server/internal/server"
 	"Server/internal/store"
 	"context"
 	"flag"
@@ -45,8 +46,10 @@ func main() {
 		db.Client.Disconnect(ctx)
 	}()
 
-	server := handler.NewServer(db)
-	server.RegisterRoutes()
+	server := server.NewServer(db)
+	server.RegisterServices()
+
+	handler.RegisterRoutes(server)
 
 	if *mode == modeDevelopment {
 		server.UseSwagger()
