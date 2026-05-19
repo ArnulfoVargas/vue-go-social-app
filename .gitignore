@@ -1,0 +1,3 @@
+/backend/api/go.sum
+/backend/api/.env.development
+/backend/api/.env.production
