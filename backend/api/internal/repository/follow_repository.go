@@ -232,12 +232,12 @@ func (r *followRepository) GetRelatedFollowSuggestions(userId primitive.ObjectID
 		{{Key: "$facet", Value: bson.M{
 			// People who your friends follow
 			"following": bson.A{
-				bson.M{"$match": bson.M{"followerId": bson.M{"$in": followingIds}}},
+				bson.M{"$match": bson.M{"followerId": bson.M{"$in": followingIds}, "status": 1}},
 				bson.M{"$project": bson.M{"userId": "$followingId", "_id": 0}},
 			},
 			// People who follow your friends
 			"followers": bson.A{
-				bson.M{"$match": bson.M{"followingId": bson.M{"$in": followingIds}}},
+				bson.M{"$match": bson.M{"followingId": bson.M{"$in": followingIds}, "status": 1}},
 				bson.M{"$project": bson.M{"userId": "$followerId", "_id": 0}},
 			},
 		}}},
@@ -253,6 +253,17 @@ func (r *followRepository) GetRelatedFollowSuggestions(userId primitive.ObjectID
 		{{Key: "$group", Value: bson.M{
 			"_id":   "$users.userId",
 			"score": bson.M{"$sum": 1},
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "users",
+			"localField":   "_id",
+			"foreignField": "_id",
+			"as":           "user",
+		}}},
+		{{Key: "$unwind", Value: "$user"}},
+		// Exclude users who are not active
+		{{Key: "$match", Value: bson.M{
+			"user.status": 1,
 		}}},
 		{{Key: "$sort", Value: bson.M{"score": -1}}},
 		{{Key: "$limit", Value: limit}},
