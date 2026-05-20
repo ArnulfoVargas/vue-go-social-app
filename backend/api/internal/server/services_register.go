@@ -19,4 +19,12 @@ func (server *Server) RegisterServices() {
 	fuserRepository := repository.NewUserRepository(server.Db)
 	followService := service.NewFollowService(fuserRepository, followRepository)
 	server.RegisterFollowService(followService)
+
+	postRepository := repository.NewPostRepository(server.Db)
+	likeRepository := repository.NewlikeRepository(server.Db)
+	postService := service.NewPostService(postRepository, likeRepository)
+	server.RegisterPostService(postService)
+
+	mediaService := service.NewMediaService()
+	server.RegisterMediaService(mediaService)
 }

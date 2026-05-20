@@ -20,10 +20,8 @@ func NewAuthHandler(validator *validator.Validator, service domain.AuthService) 
 	}
 }
 
-func SetupAuthRoutes(s fiber.Router, validator *validator.Validator, service domain.AuthService) {
+func SetupAuthRoutes(s fiber.Router, handler *AuthHandler) {
 	g := s.Group("/auth")
-
-	handler := NewAuthHandler(validator, service)
 
 	g.Post("/register", handler.register)
 	g.Post("/login", handler.login)

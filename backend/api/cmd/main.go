@@ -2,11 +2,10 @@ package main
 
 import (
 	"Server/internal/handler"
+	"Server/internal/helpers"
 	"Server/internal/server"
 	"Server/internal/store"
-	"context"
 	"flag"
-	"time"
 
 	_ "Server/internal/docs"
 
@@ -31,6 +30,10 @@ func main() {
 	mode := flag.String("mode", modeProduction, "mode of operation (production or development)")
 	flag.Parse()
 
+	if *mode != modeProduction && *mode != modeDevelopment {
+		panic("invalid mode: " + *mode)
+	}
+
 	if err := godotenv.Load(".env." + *mode); err != nil {
 		panic(err)
 	}
@@ -41,7 +44,7 @@ func main() {
 	}
 
 	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := helpers.GenerateContext()
 		defer cancel()
 		db.Client.Disconnect(ctx)
 	}()

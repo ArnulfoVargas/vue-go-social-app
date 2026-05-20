@@ -1,6 +1,5 @@
 package dto
 
-type PostDTO struct {
-	ID      string `json:"id"`
-	Content string `json:"content,omitempty"`
+type PostRequest struct {
+	Content string `json:"content,omitempty" validate:"max=500,omitempty"`
 }

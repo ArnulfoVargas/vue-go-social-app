@@ -17,6 +17,8 @@ type Server struct {
 	AuthService   domain.AuthService
 	UserService   domain.UserService
 	FollowService domain.FollowService
+	PostService   domain.PostService
+	MediaService  domain.MediaService
 }
 
 var (
@@ -51,4 +53,12 @@ func (s *Server) RegisterUserService(userService domain.UserService) {
 
 func (s *Server) RegisterFollowService(followService domain.FollowService) {
 	s.FollowService = followService
+}
+
+func (s *Server) RegisterPostService(postService domain.PostService) {
+	s.PostService = postService
+}
+
+func (s *Server) RegisterMediaService(mediaService domain.MediaService) {
+	s.MediaService = mediaService
 }

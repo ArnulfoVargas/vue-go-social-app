@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"Server/internal/constants"
 	"Server/internal/service"
 	"strings"
 
@@ -24,8 +25,8 @@ func Protected(parseJWT func(string) (*service.Claims, error)) fiber.Handler {
 			})
 		}
 
-		c.Locals("userID", claims.UserID)
-		c.Locals("email", claims.Email)
+		c.Locals(constants.USER_ID_CLAIM, claims.UserID)
+		c.Locals(constants.MAIL_CLAIM, claims.Email)
 		return c.Next()
 	}
 }

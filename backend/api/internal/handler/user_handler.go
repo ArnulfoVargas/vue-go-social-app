@@ -25,10 +25,8 @@ func NewUserHandler(validator *validator.Validator, service domain.UserService, 
 	}
 }
 
-func SetupUserRoutes(r fiber.Router, v *validator.Validator, s domain.UserService, fs domain.FollowService) {
+func SetupUserRoutes(r fiber.Router, handler *UserHandler) {
 	g := r.Group("/users", middleware.Protected(service.ParseJWT))
-
-	handler := NewUserHandler(v, s, fs)
 
 	g.Get("/suggest", handler.GetSuggestedUsers)
 	g.Get("/:id", handler.GetUser)
@@ -89,7 +87,7 @@ func (h *UserHandler) GetUser(c fiber.Ctx) error {
 // @Error 403 {object} dto.ErrorResponse "not authorized to update this profile"
 // @Error 500 {object} dto.ErrorResponse "internal server error"
 func (h *UserHandler) UpdateUser(c fiber.Ctx) error {
-	id, ok := c.Locals("userID").(string)
+	id, ok := getUserIdFromLocals(c)
 
 	if id == "" || !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResponse{
@@ -152,7 +150,8 @@ func (h *UserHandler) UpdateUser(c fiber.Ctx) error {
 // @Summary Toggle follow status between two users
 // @Description Toggles the follow status between two users. If the user is already following the target, unfollows them. If not, follows them.
 func (h *UserHandler) ToggleFollowUser(c fiber.Ctx) error {
-	id, ok := c.Locals("userID").(string)
+	id, ok := getUserIdFromLocals(c)
+
 	if id == "" || !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResponse{
 			Error:  "authentication required",
@@ -199,7 +198,7 @@ func (h *UserHandler) ToggleFollowUser(c fiber.Ctx) error {
 // @Router /api/v1/users/suggest [get]
 // @Security BearerAuth
 func (h *UserHandler) GetSuggestedUsers(c fiber.Ctx) error {
-	id, ok := c.Locals("userID").(string)
+	id, ok := getUserIdFromLocals(c)
 	if id == "" || !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResponse{
 			Error:  "authentication required",
@@ -232,7 +231,8 @@ func (h *UserHandler) DeleteUser(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	localsId, ok := c.Locals("userID").(string)
+	localsId, ok := getUserIdFromLocals(c)
+
 	if !ok {
 		return c.SendStatus(fiber.StatusForbidden)
 	}
