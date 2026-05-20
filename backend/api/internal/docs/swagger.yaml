@@ -26,6 +26,17 @@ definitions:
     - email
     - password
     type: object
+  dto.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  dto.PostRequest:
+    properties:
+      content:
+        maxLength: 500
+        type: string
+    type: object
   dto.RegisterRequest:
     properties:
       email:

@@ -38,9 +38,9 @@ func SetupPostRoutes(s fiber.Router, postHandler *PostHandler) {
 // @Accept json
 // @Produce json
 // @Param post body dto.PostRequest true "Post content"
-// @Success 201 {object} dto.GenericResponse[model.Post]
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
+// @Success 201 {object} dto.MessageResponse
 func (p *PostHandler) createPost(c fiber.Ctx) error {
 	id, ok := getUserIdFromLocals(c)
 	if !ok {
