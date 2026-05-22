@@ -10,7 +10,7 @@ REST API for a social media platform built with Go, Fiber, and MongoDB.
 - **JWT** — authentication
 
 ## Project Structure
-
+```
 internal/
 ├── handler/        # HTTP handlers
 ├── service/        # Business logic
@@ -19,6 +19,7 @@ internal/
 ├── model/          # MongoDB models
 ├── dto/            # Request/Response structs
 └── helpers/        # Utilities
+```
 
 ## Features
 
@@ -36,6 +37,7 @@ internal/
 - Cloudinary account
 
 ### Environment Variables
+```
 PORT=8080
 MONGO_URL=""
 MONGO_DB=""
@@ -44,7 +46,7 @@ JWT_ISSUER=""
 CLD_API_KEY=""
 CLD_API_SECRET=""
 CLD_CLOUD_NAME=""
-
+```
 ### Run
 
 git clone https://github.com/tu-usuario/tu-repo
