@@ -51,3 +51,6 @@ git clone https://github.com/tu-usuario/tu-repo
 cd tu-repo
 go mod tidy
 go run cmd/main.go
+
+## License
+MIT © [Arnulfo Vargas Mejia](https://github.com/ArnulfoVargas)
