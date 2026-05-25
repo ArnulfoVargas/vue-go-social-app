@@ -17,6 +17,7 @@ func RegisterRoutes(s *server.Server) {
 
 	userHandler := NewUserHandler(s.Validator, s.UserService, s.FollowService)
 	SetupUserRoutes(g, userHandler)
+
 	postHandler := NewPostHandler(s.Validator, s.PostService, s.MediaService)
 	SetupPostRoutes(g, postHandler)
 }

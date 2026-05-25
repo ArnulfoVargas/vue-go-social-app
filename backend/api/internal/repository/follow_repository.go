@@ -5,7 +5,6 @@ import (
 	"Server/internal/model"
 	"Server/internal/store"
 	"fmt"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -23,8 +22,8 @@ func NewFollowRepository(db *store.Database) *followRepository {
 	}
 }
 
-func (r *followRepository) FollowUser(userID, targetUserID string) error {
-	exists, err := r.existsFollowUnscoped(userID, targetUserID)
+func (r *followRepository) FollowUser(follow model.Follow) error {
+	exists, err := r.existsFollowUnscoped(follow.FollowerID, follow.FollowingID)
 
 	if err != nil {
 		return err
@@ -33,35 +32,15 @@ func (r *followRepository) FollowUser(userID, targetUserID string) error {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	userId, err := helpers.ToObjectID(userID)
-	if err != nil {
-		return err
-	}
-	targetId, err := helpers.ToObjectID(targetUserID)
-	if err != nil {
-		return err
-	}
-
-	now := primitive.NewDateTimeFromTime(time.Now())
 	if exists {
-		data := bson.M{
-			"status":    1,
-			"updatedAt": now,
-		}
-		_, err := r.collection.UpdateOne(ctx, bson.M{"followerId": userId, "followingId": targetId}, bson.M{"$set": data})
+		query := bson.M{"$set": bson.M{"status": 1},
+			"$currentDate": bson.M{"updatedAt": true}}
+
+		_, err := r.collection.UpdateOne(ctx, bson.M{"followerId": follow.FollowerID, "followingId": follow.FollowingID}, query)
 		if err != nil {
 			return fmt.Errorf("error creating follow")
 		}
 		return nil
-	}
-
-	follow := model.Follow{
-		ID:          primitive.NewObjectID(),
-		FollowerID:  userId,
-		FollowingID: targetId,
-		Status:      1,
-		CreatedAt:   now,
-		UpdatedAt:   now,
 	}
 
 	_, err = r.collection.InsertOne(ctx, follow)
@@ -71,7 +50,7 @@ func (r *followRepository) FollowUser(userID, targetUserID string) error {
 	return nil
 }
 
-func (r *followRepository) UnfollowUser(userID, targetUserID string) error {
+func (r *followRepository) UnfollowUser(userID, targetUserID primitive.ObjectID) error {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
@@ -83,42 +62,22 @@ func (r *followRepository) UnfollowUser(userID, targetUserID string) error {
 		return fmt.Errorf("cannot unfollow")
 	}
 
-	userId, err := helpers.ToObjectID(userID)
-	if err != nil {
-		return err
-	}
-	targetId, err := helpers.ToObjectID(targetUserID)
-	if err != nil {
-		return err
+	query := bson.M{"$set": bson.M{"status": 0},
+		"$currentDate": bson.M{"updatedAt": true},
 	}
 
-	now := time.Now()
-	data := bson.M{
-		"status":    0,
-		"updatedAt": primitive.NewDateTimeFromTime(now),
-	}
-
-	_, err = r.collection.UpdateOne(ctx, bson.M{"followerId": userId, "followingId": targetId}, bson.M{"$set": data})
+	_, err = r.collection.UpdateOne(ctx, bson.M{"followerId": userID, "followingId": targetUserID}, query)
 	if err != nil {
 		return fmt.Errorf("error unfollowing user")
 	}
 	return nil
 }
 
-func (r *followRepository) UserIsFollowing(userID, targetUserID string) (bool, error) {
+func (r *followRepository) UserIsFollowing(userID, targetUserID primitive.ObjectID) (bool, error) {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	idUser, err := helpers.ToObjectID(userID)
-	if err != nil {
-		return false, err
-	}
-	idTarget, err := helpers.ToObjectID(targetUserID)
-	if err != nil {
-		return false, err
-	}
-
-	count, err := r.collection.CountDocuments(ctx, bson.M{"followerId": idUser, "followingId": idTarget, "status": 1})
+	count, err := r.collection.CountDocuments(ctx, bson.M{"followerId": userID, "followingId": targetUserID, "status": 1})
 	if err != nil {
 		return false, fmt.Errorf("error checking follow status")
 	}
@@ -126,21 +85,12 @@ func (r *followRepository) UserIsFollowing(userID, targetUserID string) (bool, e
 	return count > 0, nil
 }
 
-func (r *followRepository) existsFollowUnscoped(userId, targetId string) (bool, error) {
+func (r *followRepository) existsFollowUnscoped(userId, targetId primitive.ObjectID) (bool, error) {
 	col := r.collection
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	idUser, err := helpers.ToObjectID(userId)
-	if err != nil {
-		return false, err
-	}
-	idTarget, err := helpers.ToObjectID(targetId)
-	if err != nil {
-		return false, err
-	}
-
-	count, err := col.CountDocuments(ctx, bson.M{"followerId": idUser, "followingId": idTarget})
+	count, err := col.CountDocuments(ctx, bson.M{"followerId": userId, "followingId": targetId})
 	if err != nil {
 		return false, fmt.Errorf("error searching follow")
 	}
@@ -148,16 +98,11 @@ func (r *followRepository) existsFollowUnscoped(userId, targetId string) (bool, 
 	return count > 0, nil
 }
 
-func (r *followRepository) GetFollowingCount(userID string) (int64, error) {
+func (r *followRepository) GetFollowingCount(userID primitive.ObjectID) (int64, error) {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	idUser, err := helpers.ToObjectID(userID)
-	if err != nil {
-		return 0, err
-	}
-
-	count, err := r.collection.CountDocuments(ctx, bson.M{"followerId": idUser, "status": 1})
+	count, err := r.collection.CountDocuments(ctx, bson.M{"followerId": userID, "status": 1})
 	if err != nil {
 		return 0, fmt.Errorf("error getting following count")
 	}
@@ -165,16 +110,11 @@ func (r *followRepository) GetFollowingCount(userID string) (int64, error) {
 	return count, nil
 }
 
-func (r *followRepository) GetFollowerCount(userID string) (int64, error) {
+func (r *followRepository) GetFollowerCount(userID primitive.ObjectID) (int64, error) {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	idUser, err := helpers.ToObjectID(userID)
-	if err != nil {
-		return 0, err
-	}
-
-	count, err := r.collection.CountDocuments(ctx, bson.M{"followingId": idUser, "status": 1})
+	count, err := r.collection.CountDocuments(ctx, bson.M{"followingId": userID, "status": 1})
 	if err != nil {
 		return 0, fmt.Errorf("error getting follower count")
 	}
@@ -182,17 +122,12 @@ func (r *followRepository) GetFollowerCount(userID string) (int64, error) {
 	return count, nil
 }
 
-func (r *followRepository) GetFollowingIds(userID string) ([]primitive.ObjectID, error) {
+func (r *followRepository) GetFollowingIds(userID primitive.ObjectID) ([]primitive.ObjectID, error) {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	idUser, err := helpers.ToObjectID(userID)
-	if err != nil {
-		return nil, err
-	}
-
 	cursor, err := r.collection.Find(ctx,
-		bson.M{"followerId": idUser, "status": 1},
+		bson.M{"followerId": userID, "status": 1},
 		options.Find().SetProjection(bson.M{"followingId": 1, "_id": 0}))
 
 	if err != nil {
@@ -220,40 +155,78 @@ func (r *followRepository) GetRelatedFollowSuggestions(userId primitive.ObjectID
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
+	excludedIds := make([]primitive.ObjectID, len(followingIds)+1)
+	copy(excludedIds, followingIds)
+	excludedIds[len(followingIds)] = userId
+
 	pipeline := mongo.Pipeline{
-		// Get all follow relationships where the user is either a follower or following
+		// Match all follow relationships where any of the user's friends
+		// are involved (either as follower or following)
 		{{Key: "$match", Value: bson.M{
 			"$or": bson.A{
 				bson.M{"followerId": bson.M{"$in": followingIds}, "status": 1},
 				bson.M{"followingId": bson.M{"$in": followingIds}, "status": 1},
 			},
 		}}},
-		// Run both directions in parallel
+		// Split into two branches in parallel:
+		// - "following": people that your friends follow
+		// - "followers": people that follow your friends
 		{{Key: "$facet", Value: bson.M{
-			// People who your friends follow
 			"following": bson.A{
 				bson.M{"$match": bson.M{"followerId": bson.M{"$in": followingIds}, "status": 1}},
-				bson.M{"$project": bson.M{"userId": "$followingId", "_id": 0}},
+				bson.M{"$project": bson.M{"users": bson.M{"userId": "$followingId"}, "_id": 0}},
 			},
-			// People who follow your friends
 			"followers": bson.A{
 				bson.M{"$match": bson.M{"followingId": bson.M{"$in": followingIds}, "status": 1}},
-				bson.M{"$project": bson.M{"userId": "$followerId", "_id": 0}},
+				bson.M{"$project": bson.M{"users": bson.M{"userId": "$followerId"}, "_id": 0}},
 			},
 		}}},
-		// Merge both arrays into one
+		// Merge both arrays into a single "users" array
 		{{Key: "$project", Value: bson.M{
 			"users": bson.M{"$concatArrays": bson.A{"$following", "$followers"}},
 		}}},
+		// Flatten the users array so each userId becomes its own document
 		{{Key: "$unwind", Value: "$users"}},
-		// Exclude yourself and people you already follow
+		// Remove the current user and people they already follow
+		// to avoid suggesting someone they are already connected to
 		{{Key: "$match", Value: bson.M{
-			"users.userId": bson.M{"$nin": append(followingIds, userId)},
+			"users.userId": bson.M{"$nin": excludedIds},
 		}}},
+		// Inject an additional signal: owners of posts the user has liked.
+		// Each liked post owner gets +1 to their score, same as a follow connection.
+		// This rewards accounts the user actively engages with.
+		{{Key: "$unionWith", Value: bson.M{
+			"coll": "likes",
+			"pipeline": bson.A{
+				// Only consider likes made by the current user
+				bson.M{"$match": bson.M{"userId": userId}},
+				// Look up the post to get the owner's userId
+				bson.M{"$lookup": bson.M{
+					"from":         "posts",
+					"localField":   "postId",
+					"foreignField": "_id",
+					"as":           "post",
+				}},
+				bson.M{"$unwind": "$post"},
+				// Normalize to the same {users: {userId}} shape as the follow pipeline
+				bson.M{"$project": bson.M{
+					"users": bson.M{"userId": "$post.userId"},
+					"_id":   0,
+				}},
+				bson.M{"$unwind": "$users"},
+				// Apply the same exclusion filter as the follow pipeline
+				bson.M{"$match": bson.M{
+					"users.userId": bson.M{"$nin": excludedIds},
+				}},
+			},
+		}}},
+		// Count how many times each candidate userId appeared across
+		// both follow connections and liked posts — this is their relevance score
 		{{Key: "$group", Value: bson.M{
 			"_id":   "$users.userId",
 			"score": bson.M{"$sum": 1},
 		}}},
+		// Hydrate each userId with their full user document
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "users",
 			"localField":   "_id",
@@ -261,10 +234,9 @@ func (r *followRepository) GetRelatedFollowSuggestions(userId primitive.ObjectID
 			"as":           "user",
 		}}},
 		{{Key: "$unwind", Value: "$user"}},
-		// Exclude users who are not active
-		{{Key: "$match", Value: bson.M{
-			"user.status": 1,
-		}}},
+		// Filter out inactive accounts
+		{{Key: "$match", Value: bson.M{"user.status": 1}}},
+		// Return the most relevant suggestions first
 		{{Key: "$sort", Value: bson.M{"score": -1}}},
 		{{Key: "$limit", Value: limit}},
 	}

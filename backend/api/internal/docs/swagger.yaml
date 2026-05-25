@@ -31,12 +31,6 @@ definitions:
       message:
         type: string
     type: object
-  dto.PostRequest:
-    properties:
-      content:
-        maxLength: 500
-        type: string
-    type: object
   dto.RegisterRequest:
     properties:
       email:
@@ -151,6 +145,40 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /api/v1/posts:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new post with the provided content
+      parameters:
+      - description: Post content
+        in: formData
+        name: content
+        type: string
+      - description: Attached files
+        in: formData
+        name: files
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new post
+      tags:
+      - posts
   /api/v1/users/{id}:
     delete:
       description: Deletes the user with the given ID

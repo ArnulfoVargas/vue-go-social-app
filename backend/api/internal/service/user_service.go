@@ -24,7 +24,11 @@ func NewUserService(userRepository domain.UserRepository, followRepository domai
 }
 
 func (s *userService) GetUser(id string) (*model.User, error) {
-	user, err := s.userRepo.GetUserById(id)
+	uId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return nil, err
+	}
+	user, err := s.userRepo.GetUserById(uId)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +41,10 @@ func (s *userService) GetUser(id string) (*model.User, error) {
 }
 
 func (s *userService) UpdateUser(id string, user *dto.UpdateProfileRequest) error {
+	uId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return err
+	}
 	data := bson.M{}
 
 	if user.Name != nil {
@@ -50,11 +58,16 @@ func (s *userService) UpdateUser(id string, user *dto.UpdateProfileRequest) erro
 		data["bio"] = *user.Bio
 	}
 
-	return s.userRepo.UpdateUserById(id, data)
+	return s.userRepo.UpdateUserById(uId, data)
 }
 
 func (s *userService) GetSuggestedUsers(id string) ([]model.User, error) {
-	followingIds, err := s.followRepo.GetFollowingIds(id)
+	uId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	followingIds, err := s.followRepo.GetFollowingIds(uId)
 	if err != nil {
 		return nil, err
 	}
@@ -87,5 +100,9 @@ func (s *userService) GetSuggestedUsers(id string) ([]model.User, error) {
 }
 
 func (s *userService) DeleteUser(id string) error {
-	return s.userRepo.DeleteUserById(id)
+	uId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return err
+	}
+	return s.userRepo.DeleteUserById(uId)
 }

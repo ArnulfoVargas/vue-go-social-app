@@ -16,11 +16,11 @@ type UserService interface {
 }
 
 type UserRepository interface {
-	GetUserById(id string) (*model.User, error)
-	UpdateUserById(id string, data bson.M) error
-	UserExistsById(id string) (bool, error)
+	GetUserById(id primitive.ObjectID) (*model.User, error)
+	UpdateUserById(id primitive.ObjectID, data bson.M) error
+	UserExistsById(id primitive.ObjectID) (bool, error)
 	GetUsersExcluding(excludeIDs []primitive.ObjectID, limit int) ([]model.User, error)
 	GetUsersByIds(ids []primitive.ObjectID) ([]model.User, error)
 	GetIdsExcluding(excludeIDs []primitive.ObjectID, limit int) ([]primitive.ObjectID, error)
-	DeleteUserById(id string) error
+	DeleteUserById(id primitive.ObjectID) error
 }

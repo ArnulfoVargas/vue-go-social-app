@@ -42,23 +42,3 @@ func NewServer(db *store.Database) *Server {
 func (s *Server) Start() {
 	panic(s.App.Listen(":" + os.Getenv("PORT")))
 }
-
-func (s *Server) RegisterAuthService(authService domain.AuthService) {
-	s.AuthService = authService
-}
-
-func (s *Server) RegisterUserService(userService domain.UserService) {
-	s.UserService = userService
-}
-
-func (s *Server) RegisterFollowService(followService domain.FollowService) {
-	s.FollowService = followService
-}
-
-func (s *Server) RegisterPostService(postService domain.PostService) {
-	s.PostService = postService
-}
-
-func (s *Server) RegisterMediaService(mediaService domain.MediaService) {
-	s.MediaService = mediaService
-}

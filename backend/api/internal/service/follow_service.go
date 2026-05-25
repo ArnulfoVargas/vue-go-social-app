@@ -2,7 +2,12 @@ package service
 
 import (
 	"Server/internal/domain"
+	"Server/internal/helpers"
+	"Server/internal/model"
 	"fmt"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type followService struct {
@@ -18,7 +23,17 @@ func NewFollowService(userRepo domain.UserRepository, followRepo domain.FollowRe
 }
 
 func (s *followService) ToggleFollowUser(followerID, followingID string) (bool, error) {
-	exists, err := s.userRepo.UserExistsById(followingID)
+	followerId, err := helpers.ToObjectID(followerID)
+	if err != nil {
+		return false, err
+	}
+
+	followingId, err := helpers.ToObjectID(followingID)
+	if err != nil {
+		return false, err
+	}
+
+	exists, err := s.userRepo.UserExistsById(followerId)
 	if err != nil {
 		return false, err
 	}
@@ -26,15 +41,25 @@ func (s *followService) ToggleFollowUser(followerID, followingID string) (bool, 
 		return false, fmt.Errorf("user not found")
 	}
 
-	isFollowing, err := s.followRepo.UserIsFollowing(followerID, followingID)
+	isFollowing, err := s.followRepo.UserIsFollowing(followerId, followingId)
 
 	if err != nil {
 		return false, err
 	}
 
 	if isFollowing {
-		return false, s.followRepo.UnfollowUser(followerID, followingID)
+		return false, s.followRepo.UnfollowUser(followerId, followingId)
 	}
 
-	return true, s.followRepo.FollowUser(followerID, followingID)
+	now := primitive.NewDateTimeFromTime(time.Now())
+	follow := model.Follow{
+		ID:          primitive.NewObjectID(),
+		FollowerID:  followerId,
+		FollowingID: followingId,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		Status:      1,
+	}
+
+	return true, s.followRepo.FollowUser(follow)
 }

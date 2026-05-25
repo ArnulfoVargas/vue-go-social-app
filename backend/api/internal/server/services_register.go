@@ -6,25 +6,40 @@ import (
 )
 
 func (server *Server) RegisterServices() {
+	server.RegisterAuthService()
+	server.RegisterUserService()
+	server.RegisterFollowService()
+	server.RegisterPostService()
+	server.RegisterMediaService()
+}
+
+func (server *Server) RegisterUserService() {
+	followRepository := repository.NewFollowRepository(server.Db)
+	userRepository := repository.NewUserRepository(server.Db)
+	server.UserService = service.NewUserService(userRepository, followRepository)
+}
+
+func (server *Server) RegisterMediaService() {
+	mediaService := service.NewMediaService()
+	server.MediaService = mediaService
+}
+
+func (server *Server) RegisterAuthService() {
 	authRepository := repository.NewAuthRepository(server.Db)
 	authService := service.NewAuthService(authRepository)
-	server.RegisterAuthService(authService)
+	server.AuthService = authService
+}
 
-	ufollowRepository := repository.NewFollowRepository(server.Db)
-	userRepository := repository.NewUserRepository(server.Db)
-	userService := service.NewUserService(userRepository, ufollowRepository)
-	server.RegisterUserService(userService)
-
+func (server *Server) RegisterFollowService() {
 	followRepository := repository.NewFollowRepository(server.Db)
 	fuserRepository := repository.NewUserRepository(server.Db)
 	followService := service.NewFollowService(fuserRepository, followRepository)
-	server.RegisterFollowService(followService)
+	server.FollowService = followService
+}
 
+func (server *Server) RegisterPostService() {
 	postRepository := repository.NewPostRepository(server.Db)
 	likeRepository := repository.NewlikeRepository(server.Db)
-	postService := service.NewPostService(postRepository, likeRepository)
-	server.RegisterPostService(postService)
-
-	mediaService := service.NewMediaService()
-	server.RegisterMediaService(mediaService)
+	userRepository := repository.NewUserRepository(server.Db)
+	server.PostService = service.NewPostService(postRepository, likeRepository, userRepository)
 }

@@ -6,7 +6,6 @@ import (
 	"Server/internal/store"
 	"errors"
 	"fmt"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -23,22 +22,17 @@ func NewUserRepository(db *store.Database) *userRepository {
 	}
 }
 
-func (r *userRepository) GetUserById(userId string) (*model.User, error) {
+func (r *userRepository) GetUserById(userId primitive.ObjectID) (*model.User, error) {
 	col := r.collection
 
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
 	var user model.User
-	objId, err := helpers.ToObjectID(userId)
-	if err != nil {
-		return nil, err
-	}
 
-	err = col.FindOne(ctx, bson.M{"_id": objId, "status": 1}).Decode(&user)
+	err := col.FindOne(ctx, bson.M{"_id": userId, "status": 1}).Decode(&user)
 
 	if err != nil {
-		println(err.Error())
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
 		}
@@ -48,20 +42,17 @@ func (r *userRepository) GetUserById(userId string) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) UpdateUserById(userId string, data bson.M) error {
+func (r *userRepository) UpdateUserById(userId primitive.ObjectID, data bson.M) error {
 	col := r.collection
 
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	objId, err := helpers.ToObjectID(userId)
-	if err != nil {
-		return err
+	insert := bson.M{
+		"$set":         data,
+		"$currentDate": bson.M{"updatedAt": true},
 	}
-
-	data["updatedAt"] = primitive.NewDateTimeFromTime(time.Now())
-
-	_, err = col.UpdateOne(ctx, bson.M{"_id": objId, "status": 1}, bson.M{"$set": data})
+	_, err := col.UpdateOne(ctx, bson.M{"_id": userId, "status": 1}, insert)
 	if err != nil {
 		return fmt.Errorf("error updating user: %w", err)
 	}
@@ -69,16 +60,11 @@ func (r *userRepository) UpdateUserById(userId string, data bson.M) error {
 	return nil
 }
 
-func (r *userRepository) UserExistsById(userId string) (bool, error) {
-	id, err := helpers.ToObjectID(userId)
-	if err != nil {
-		return false, err
-	}
-
+func (r *userRepository) UserExistsById(userId primitive.ObjectID) (bool, error) {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": id})
+	count, err := r.collection.CountDocuments(ctx, bson.M{"_id": userId})
 	if err != nil {
 		return false, fmt.Errorf("error finding user")
 	}
@@ -184,20 +170,16 @@ func (r *userRepository) GetIdsExcluding(excludeIDs []primitive.ObjectID, limit 
 	return ids, nil
 }
 
-func (r *userRepository) DeleteUserById(id string) error {
-	objId, err := helpers.ToObjectID(id)
-	if err != nil {
-		return fmt.Errorf("invalid id: %s", id)
-	}
-
+func (r *userRepository) DeleteUserById(id primitive.ObjectID) error {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 
-	filter := bson.M{"_id": objId}
+	filter := bson.M{"_id": id}
 	result := bson.M{
-		"$set": bson.M{"status": 0, "updatedAt": primitive.NewDateTimeFromTime(time.Now())},
+		"$set":         bson.M{"status": 0},
+		"$currentDate": bson.M{"updatedAt": true},
 	}
-	_, err = r.collection.UpdateOne(ctx, filter, result)
+	_, err := r.collection.UpdateOne(ctx, filter, result)
 	if err != nil {
 		return fmt.Errorf("error deleting user: %w", err)
 	}
