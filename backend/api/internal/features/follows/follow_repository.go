@@ -109,7 +109,7 @@ func (r *followRepository) GetFollowingCount(userID primitive.ObjectID) (int64, 
 	return count, nil
 }
 
-func (r *followRepository) GetFollowerCount(userID primitive.ObjectID) (int64, error) {
+func (r *followRepository) GetFollowersCount(userID primitive.ObjectID) (int64, error) {
 	ctx, cancel := helpers.GenerateContext()
 	defer cancel()
 

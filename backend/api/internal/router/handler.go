@@ -1,9 +1,10 @@
-package handler
+package router
 
 import (
 	"Server/internal/features/auth"
 	"Server/internal/features/follows"
 	"Server/internal/features/posts"
+	"Server/internal/features/profile"
 	"Server/internal/features/suggestion"
 	"Server/internal/features/users"
 	"Server/internal/server"
@@ -19,7 +20,7 @@ func RegisterRoutes(s *server.Server) {
 	authHandler := auth.NewAuthHandler(s.Validator, s.AuthService)
 	auth.SetupAuthRoutes(g, authHandler)
 
-	userHandler := users.NewUserHandler(s.Validator, s.UserService)
+	userHandler := users.NewUserHandler(s.Validator, s.UserService, s.MediaService)
 	users.SetupUserRoutes(g, userHandler)
 
 	postHandler := posts.NewPostHandler(s.Validator, s.PostService, s.MediaService)
@@ -30,6 +31,9 @@ func RegisterRoutes(s *server.Server) {
 
 	suggestionHandler := suggestion.NewSuggestionHandler(s.Validator, s.SuggestionService)
 	suggestion.SetupSuggestionRoutes(g, suggestionHandler)
+
+	profileHandler := profile.NewProfileHandler(s.ProfileService, s.UserService)
+	profile.SetupProfileRoutes(g, profileHandler)
 }
 
 // @Summary Hello World

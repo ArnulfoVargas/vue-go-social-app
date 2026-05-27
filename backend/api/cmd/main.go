@@ -1,8 +1,8 @@
 package main
 
 import (
-	"Server/internal/handler"
 	"Server/internal/helpers"
+	"Server/internal/router"
 	"Server/internal/server"
 	"Server/internal/store"
 	"flag"
@@ -52,7 +52,7 @@ func main() {
 	server := server.NewServer(db)
 	server.RegisterServices()
 
-	handler.RegisterRoutes(server)
+	router.RegisterRoutes(server)
 
 	if *mode == modeDevelopment {
 		server.UseSwagger()

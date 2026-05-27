@@ -1,28 +1,34 @@
 package users
 
 import (
+	"Server/internal/features/media"
 	"Server/internal/helpers"
 	"Server/internal/shared"
 	"Server/internal/validator"
+	"mime/multipart"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 type UserHandler struct {
-	validator   *validator.Validator
-	userService UserService
+	validator    *validator.Validator
+	userService  UserService
+	mediaService media.MediaService
 }
 
-func NewUserHandler(validator *validator.Validator, service UserService) *UserHandler {
+func NewUserHandler(validator *validator.Validator, service UserService, mediaService media.MediaService) *UserHandler {
 	return &UserHandler{
-		validator:   validator,
-		userService: service,
+		mediaService: mediaService,
+		validator:    validator,
+		userService:  service,
 	}
 }
 
 func SetupUserRoutes(r fiber.Router, handler *UserHandler) {
 	g := r.Group("/users", shared.Protected(shared.ParseJWT))
 
+	g.Post("/profile", handler.AddProfilePicture)
+	g.Delete("/profile", handler.RemoveProfilePicture)
 	g.Get("/:id", handler.GetUser)
 	g.Patch("/:id", handler.UpdateUser)
 	g.Delete("/:id", handler.DeleteUser)
@@ -153,6 +159,85 @@ func (h *UserHandler) DeleteUser(c fiber.Ctx) error {
 	}
 
 	if err := h.userService.DeleteUser(id); err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+// @Tags users
+// @Router /api/v1/users/{id}/profile-picture [post]
+// @Security BearerAuth
+// @Summary Add profile picture
+// @Description Adds a profile picture to the user with the given ID
+// @Param file formData file true "Profile picture"
+// @Success 200 {object} SetProfilePictureResponse
+func (h *UserHandler) AddProfilePicture(c fiber.Ctx) error {
+	id, ok := helpers.GetUserIdFromLocals(c)
+	if id == "" {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	if !ok {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	var files []*multipart.FileHeader
+	form, err := c.MultipartForm()
+	if err == nil {
+		files = form.File["images"]
+	}
+
+	if len(files) != 1 {
+		return c.Status(fiber.StatusBadRequest).JSON(shared.ErrorResponse{
+			Error:  "only one image is allowed",
+			Status: fiber.StatusBadRequest,
+		})
+	}
+
+	var mediafile *media.Media
+	if len(files) == 1 {
+		mediafile, err = h.mediaService.Upload(files[0])
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(shared.ErrorResponse{
+				Error:  "failed to upload images",
+				Status: fiber.StatusInternalServerError,
+			})
+		}
+	}
+
+	if mediafile == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(shared.ErrorResponse{
+			Error:  "no image provided",
+			Status: fiber.StatusBadRequest,
+		})
+	}
+
+	if err := h.userService.AddProfilePicture(id, *mediafile); err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(SetProfilePictureResponse{
+		AvatarUrl: media.MediaResponse{
+			ID:  mediafile.ID.Hex(),
+			URL: mediafile.URL,
+		},
+	})
+}
+
+// @Tags users
+// @Router /api/v1/users/{id}/profile-picture [delete]
+// @Security BearerAuth
+// @Summary Remove profile picture
+// @Description Removes the profile picture from the user with the given ID
+// @Param id path string true "User ID"
+func (h *UserHandler) RemoveProfilePicture(c fiber.Ctx) error {
+	id, ok := helpers.GetUserIdFromLocals(c)
+	if !ok {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	if err := h.userService.RemoveProfilePicture(id); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 

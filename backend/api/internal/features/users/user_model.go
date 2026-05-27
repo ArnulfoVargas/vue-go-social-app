@@ -12,7 +12,7 @@ type User struct {
 	Email     string             `json:"email" bson:"email"`
 	Password  string             `json:"password" bson:"password"`
 	Bio       string             `json:"bio" bson:"bio"`
-	Avatar    *media.Media       `json:"avatar,omitempty" bson:"avatar,omitempty"`
+	Avatar    media.Media        `json:"avatar,omitempty" bson:"avatar,omitempty"`
 	CreatedAt primitive.DateTime `json:"createdAt" bson:"createdAt"`
 	UpdatedAt primitive.DateTime `json:"updatedAt" bson:"updatedAt"`
 	Status    uint8              `json:"status" bson:"status"`

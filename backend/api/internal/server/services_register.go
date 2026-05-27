@@ -6,6 +6,7 @@ import (
 	"Server/internal/features/likes"
 	"Server/internal/features/media"
 	"Server/internal/features/posts"
+	"Server/internal/features/profile"
 	"Server/internal/features/suggestion"
 	"Server/internal/features/users"
 )
@@ -58,4 +59,12 @@ func (server *Server) RegisterSuggestionService() {
 	followRespo := follows.NewFollowRepository(server.Db)
 	suggestionService := suggestion.NewSuggestionService(userRespo, followRespo)
 	server.SuggestionService = suggestionService
+}
+
+func (server *Server) RegisterProfileService() {
+	userRepo := users.NewUserRepository(server.Db)
+	followRepo := follows.NewFollowRepository(server.Db)
+	postsRepo := posts.NewPostRepository(server.Db)
+	profileService := profile.NewProfileService(userRepo, followRepo, postsRepo)
+	server.ProfileService = profileService
 }

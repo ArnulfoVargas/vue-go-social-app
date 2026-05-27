@@ -62,3 +62,21 @@ func (s *followService) ToggleFollowUser(followerID, followingID string) (bool, 
 
 	return true, s.followRepo.FollowUser(follow)
 }
+
+func (s *followService) GetFollowingCount(userID string) (int64, error) {
+	userId, err := helpers.ToObjectID(userID)
+	if err != nil {
+		return 0, err
+	}
+
+	return s.followRepo.GetFollowingCount(userId)
+}
+
+func (s *followService) GetFollowersCount(userID string) (int64, error) {
+	userId, err := helpers.ToObjectID(userID)
+	if err != nil {
+		return 0, err
+	}
+
+	return s.followRepo.GetFollowersCount(userId)
+}

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"Server/internal/features/media"
 	"Server/internal/helpers"
 	"fmt"
 
@@ -45,9 +46,6 @@ func (s *userService) UpdateUser(id string, user *UpdateProfileRequest) error {
 		data["name"] = *user.Name
 	}
 
-	if user.ImageUrl != nil {
-		data["image"] = *user.ImageUrl
-	}
 	if user.Bio != nil {
 		data["bio"] = *user.Bio
 	}
@@ -61,4 +59,29 @@ func (s *userService) DeleteUser(id string) error {
 		return err
 	}
 	return s.userRepo.DeleteUserById(uId)
+}
+
+func (s *userService) AddProfilePicture(id string, media media.Media) error {
+	uId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return err
+	}
+
+	return s.userRepo.SetProfilePicture(uId, media)
+}
+
+func (s *userService) RemoveProfilePicture(id string) error {
+	uId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return err
+	}
+	return s.userRepo.RemoveProfilePicture(uId)
+}
+
+func (s *userService) ExistsUser(id string) (bool, error) {
+	uId, err := helpers.ToObjectID(id)
+	if err != nil {
+		return false, err
+	}
+	return s.userRepo.UserExistsById(uId)
 }

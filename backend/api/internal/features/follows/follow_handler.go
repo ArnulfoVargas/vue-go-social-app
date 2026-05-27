@@ -21,10 +21,10 @@ func NewFollowsHandler(validator *validator.Validator, service FollowService) *F
 func SetupFollowsRoutes(r fiber.Router, handler *FollowHandler) {
 	g := r.Group("/follow", shared.Protected(shared.ParseJWT))
 
-	g.Patch("/:id", handler.ToggleFollowUser)
+	g.Patch("/:id", handler.toggleFollowUser)
 }
 
-// ToggleFollowUser toggles the follow status between two users
+// toggleFollowUser toggles the follow status between two users
 // @Param id path string true "user ID to follow/unfollow"
 // @Failure 400 {object} shared.ErrorResponse
 // @Failure 401 {object} shared.ErrorResponse
@@ -36,7 +36,7 @@ func SetupFollowsRoutes(r fiber.Router, handler *FollowHandler) {
 // @Tags users
 // @Summary Toggle follow status between two users
 // @Description Toggles the follow status between two users. If the user is already following the target, unfollows them. If not, follows them.
-func (h *FollowHandler) ToggleFollowUser(c fiber.Ctx) error {
+func (h *FollowHandler) toggleFollowUser(c fiber.Ctx) error {
 	id, ok := helpers.GetUserIdFromLocals(c)
 
 	if id == "" || !ok {

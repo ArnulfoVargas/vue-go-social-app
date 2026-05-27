@@ -1,6 +1,7 @@
 package users
 
 import (
+	"Server/internal/features/media"
 	"Server/internal/helpers"
 	"Server/internal/store"
 	"errors"
@@ -181,6 +182,37 @@ func (r *userRepository) DeleteUserById(id primitive.ObjectID) error {
 	_, err := r.collection.UpdateOne(ctx, filter, result)
 	if err != nil {
 		return fmt.Errorf("error deleting user: %w", err)
+	}
+
+	return nil
+}
+func (r *userRepository) SetProfilePicture(id primitive.ObjectID, media media.Media) error {
+	ctx, cancel := helpers.GenerateContext()
+	defer cancel()
+
+	filter := bson.M{"_id": id}
+	update := bson.M{"$set": bson.M{"avatar": media}}
+	_, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("error setting profile picture: %w", err)
+	}
+
+	return nil
+}
+
+func (r *userRepository) RemoveProfilePicture(id primitive.ObjectID) error {
+	ctx, cancel := helpers.GenerateContext()
+	defer cancel()
+
+	filter := bson.M{"_id": id}
+	update := bson.M{"$unset": bson.M{"avatar": ""}}
+	res, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("error removing profile picture: %w", err)
+	}
+
+	if res.ModifiedCount == 0 {
+		return fmt.Errorf("no user found with id: %s", id.Hex())
 	}
 
 	return nil

@@ -6,6 +6,7 @@ import (
 	"Server/internal/features/follows"
 	"Server/internal/features/media"
 	domain "Server/internal/features/posts"
+	"Server/internal/features/profile"
 	"Server/internal/features/suggestion"
 	"Server/internal/features/users"
 	"Server/internal/store"
@@ -27,6 +28,7 @@ type Server struct {
 	MediaService      media.MediaService
 	SuggestionService suggestion.SuggestionService
 	CommentService    comments.CommentService
+	ProfileService    profile.ProfileService
 }
 
 var (
