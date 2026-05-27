@@ -1,8 +1,13 @@
 package server
 
 import (
-	"Server/internal/repository"
-	"Server/internal/service"
+	"Server/internal/features/auth"
+	"Server/internal/features/follows"
+	"Server/internal/features/likes"
+	"Server/internal/features/media"
+	"Server/internal/features/posts"
+	"Server/internal/features/suggestion"
+	"Server/internal/features/users"
 )
 
 func (server *Server) RegisterServices() {
@@ -11,35 +16,46 @@ func (server *Server) RegisterServices() {
 	server.RegisterFollowService()
 	server.RegisterPostService()
 	server.RegisterMediaService()
+	server.RegisterCommentService()
+	server.RegisterSuggestionService()
 }
 
 func (server *Server) RegisterUserService() {
-	followRepository := repository.NewFollowRepository(server.Db)
-	userRepository := repository.NewUserRepository(server.Db)
-	server.UserService = service.NewUserService(userRepository, followRepository)
+	userRepository := users.NewUserRepository(server.Db)
+	server.UserService = users.NewUserService(userRepository)
 }
 
 func (server *Server) RegisterMediaService() {
-	mediaService := service.NewMediaService()
+	mediaService := media.NewMediaService()
 	server.MediaService = mediaService
 }
 
 func (server *Server) RegisterAuthService() {
-	authRepository := repository.NewAuthRepository(server.Db)
-	authService := service.NewAuthService(authRepository)
+	authRepository := auth.NewAuthRepository(server.Db)
+	authService := auth.NewAuthService(authRepository)
 	server.AuthService = authService
 }
 
 func (server *Server) RegisterFollowService() {
-	followRepository := repository.NewFollowRepository(server.Db)
-	fuserRepository := repository.NewUserRepository(server.Db)
-	followService := service.NewFollowService(fuserRepository, followRepository)
+	followRepository := follows.NewFollowRepository(server.Db)
+	userRepository := users.NewUserRepository(server.Db)
+	followService := follows.NewFollowService(userRepository, followRepository)
 	server.FollowService = followService
 }
 
 func (server *Server) RegisterPostService() {
-	postRepository := repository.NewPostRepository(server.Db)
-	likeRepository := repository.NewlikeRepository(server.Db)
-	userRepository := repository.NewUserRepository(server.Db)
-	server.PostService = service.NewPostService(postRepository, likeRepository, userRepository)
+	postRepository := posts.NewPostRepository(server.Db)
+	likeRepository := likes.NewlikeRepository(server.Db)
+	userRepository := users.NewUserRepository(server.Db)
+	server.PostService = posts.NewPostService(postRepository, likeRepository, userRepository)
+}
+
+func (server *Server) RegisterCommentService() {
+}
+
+func (server *Server) RegisterSuggestionService() {
+	userRespo := users.NewUserRepository(server.Db)
+	followRespo := follows.NewFollowRepository(server.Db)
+	suggestionService := suggestion.NewSuggestionService(userRespo, followRespo)
+	server.SuggestionService = suggestionService
 }

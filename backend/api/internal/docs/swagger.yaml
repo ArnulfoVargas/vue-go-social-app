@@ -1,20 +1,13 @@
 basePath: /
 definitions:
-  dto.AuthResponse:
+  auth.AuthResponse:
     properties:
       id:
         type: string
       token:
         type: string
     type: object
-  dto.ErrorResponse:
-    properties:
-      error:
-        type: string
-      status:
-        type: integer
-    type: object
-  dto.LoginRequest:
+  auth.LoginRequest:
     properties:
       email:
         type: string
@@ -26,12 +19,7 @@ definitions:
     - email
     - password
     type: object
-  dto.MessageResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  dto.RegisterRequest:
+  auth.RegisterRequest:
     properties:
       email:
         type: string
@@ -48,7 +36,44 @@ definitions:
     - name
     - password
     type: object
-  dto.UpdateProfileRequest:
+  media.MediaResponse:
+    properties:
+      id:
+        type: string
+      url:
+        type: string
+    type: object
+  posts.PostResponse:
+    properties:
+      content:
+        type: string
+      id:
+        type: string
+      media:
+        items:
+          $ref: '#/definitions/media.MediaResponse'
+        type: array
+    type: object
+  posts.PostsResponse:
+    properties:
+      posts:
+        items:
+          $ref: '#/definitions/posts.PostResponse'
+        type: array
+    type: object
+  shared.ErrorResponse:
+    properties:
+      error:
+        type: string
+      status:
+        type: integer
+    type: object
+  shared.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  users.UpdateProfileRequest:
     properties:
       bio:
         maxLength: 500
@@ -96,22 +121,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginRequest'
+          $ref: '#/definitions/auth.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.AuthResponse'
+            $ref: '#/definitions/auth.AuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
       summary: Login a user
       tags:
       - auth
@@ -126,22 +151,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+          $ref: '#/definitions/auth.RegisterRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.AuthResponse'
+            $ref: '#/definitions/auth.AuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
       summary: Register a new user
       tags:
       - auth
@@ -165,20 +190,87 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.MessageResponse'
+            $ref: '#/definitions/shared.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a new post
       tags:
       - posts
+  /api/v1/posts/{id}:
+    delete:
+      description: Delete a post by its ID
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      summary: Delete a post
+    put:
+      description: Update a post by its ID
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      summary: Update a post
+  /api/v1/posts/suggested:
+    get:
+      description: Get suggested posts for the authenticated user
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/posts.PostsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      summary: Get suggested posts
+  /api/v1/posts/user/{id}:
+    get:
+      description: Get all posts by a user
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/posts.PostsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      summary: Get posts by user
   /api/v1/users/{id}:
     delete:
       description: Deletes the user with the given ID
@@ -208,15 +300,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user by ID
@@ -237,7 +329,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateProfileRequest'
+          $ref: '#/definitions/users.UpdateProfileRequest'
       produces:
       - application/json
       responses: {}
@@ -264,15 +356,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/shared.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Toggle follow status between two users
@@ -285,7 +377,15 @@ paths:
       description: Returns a list of suggested users for the authenticated user
       produces:
       - application/json
-      responses: {}
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get suggested users

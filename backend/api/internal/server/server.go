@@ -1,7 +1,13 @@
 package server
 
 import (
-	"Server/internal/domain"
+	"Server/internal/features/auth"
+	"Server/internal/features/comments"
+	"Server/internal/features/follows"
+	"Server/internal/features/media"
+	domain "Server/internal/features/posts"
+	"Server/internal/features/suggestion"
+	"Server/internal/features/users"
 	"Server/internal/store"
 	"Server/internal/validator"
 	"os"
@@ -11,14 +17,16 @@ import (
 )
 
 type Server struct {
-	App           *fiber.App
-	Db            *store.Database
-	Validator     *validator.Validator
-	AuthService   domain.AuthService
-	UserService   domain.UserService
-	FollowService domain.FollowService
-	PostService   domain.PostService
-	MediaService  domain.MediaService
+	App               *fiber.App
+	Db                *store.Database
+	Validator         *validator.Validator
+	AuthService       auth.AuthService
+	UserService       users.UserService
+	FollowService     follows.FollowService
+	PostService       domain.PostService
+	MediaService      media.MediaService
+	SuggestionService suggestion.SuggestionService
+	CommentService    comments.CommentService
 }
 
 var (

@@ -1,7 +1,11 @@
 package handler
 
 import (
-	"Server/internal/constants"
+	"Server/internal/features/auth"
+	"Server/internal/features/follows"
+	"Server/internal/features/posts"
+	"Server/internal/features/suggestion"
+	"Server/internal/features/users"
 	"Server/internal/server"
 
 	"github.com/gofiber/fiber/v3"
@@ -12,14 +16,20 @@ func RegisterRoutes(s *server.Server) {
 
 	g := s.App.Group("/api/v1")
 
-	authHandler := NewAuthHandler(s.Validator, s.AuthService)
-	SetupAuthRoutes(g, authHandler)
+	authHandler := auth.NewAuthHandler(s.Validator, s.AuthService)
+	auth.SetupAuthRoutes(g, authHandler)
 
-	userHandler := NewUserHandler(s.Validator, s.UserService, s.FollowService)
-	SetupUserRoutes(g, userHandler)
+	userHandler := users.NewUserHandler(s.Validator, s.UserService)
+	users.SetupUserRoutes(g, userHandler)
 
-	postHandler := NewPostHandler(s.Validator, s.PostService, s.MediaService)
-	SetupPostRoutes(g, postHandler)
+	postHandler := posts.NewPostHandler(s.Validator, s.PostService, s.MediaService)
+	posts.SetupPostRoutes(g, postHandler)
+
+	followsHandler := follows.NewFollowsHandler(s.Validator, s.FollowService)
+	follows.SetupFollowsRoutes(g, followsHandler)
+
+	suggestionHandler := suggestion.NewSuggestionHandler(s.Validator, s.SuggestionService)
+	suggestion.SetupSuggestionRoutes(g, suggestionHandler)
 }
 
 // @Summary Hello World
@@ -30,9 +40,4 @@ func RegisterRoutes(s *server.Server) {
 // @Router / [get]
 func HelloWorld(c fiber.Ctx) error {
 	return c.SendString("Hello, World!")
-}
-
-func getUserIdFromLocals(c fiber.Ctx) (string, bool) {
-	id, ok := c.Locals(constants.USER_ID_CLAIM).(string)
-	return id, ok
 }

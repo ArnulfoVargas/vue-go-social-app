@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gofiber/fiber/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -18,4 +19,9 @@ func ToObjectID(id string) (primitive.ObjectID, error) {
 
 func GenerateContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), constants.DEFAULT_CONTEXT_TIMEOUT)
+}
+
+func GetUserIdFromLocals(c fiber.Ctx) (string, bool) {
+	id, ok := c.Locals(constants.USER_ID_CLAIM).(string)
+	return id, ok
 }
